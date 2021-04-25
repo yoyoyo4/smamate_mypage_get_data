@@ -1,9 +1,11 @@
-#coding: UTF-8
+import os
 
 import requests
 from bs4 import BeautifulSoup
 
 def main():
+	os.chdir(os.path.dirname(os.path.abspath(__file__))) # 本pyファイルのディレクトリをカレントディレクトリとする
+
 	# 戻り値1ならデータ取得を行わない
 	get_data(pre_data())
 
