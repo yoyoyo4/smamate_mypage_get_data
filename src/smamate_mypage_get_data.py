@@ -26,11 +26,11 @@ def pre_data():
 	text="\n".join(line for line in lines if line)
 
 	# いったんファイルに書き出し
-	with open('..\\data\\base.txt', mode='w', encoding='UTF-8') as b:
+	with open('base.txt', mode='w', encoding='UTF-8') as b:
 		b.writelines(text)
 
 	# 今期レートという文言が見つかったら詳細処理、見つからない場合は0戦状態なので処理をスキップする
-	with open('..\\data\\base.txt', mode='r', encoding='UTF-8') as f:
+	with open('base.txt', mode='r', encoding='UTF-8') as f:
 		check_word = f.readlines()
 	
 	check_word_position = [i for i, line in enumerate(check_word) if '今期レート' in line]
@@ -49,23 +49,23 @@ def get_data(check_status):
 	# 1 = レートデータが見つかった場合はデータを作成する
 	if check_status == 0:
 		my_rate = '現在のレート：-'
-		with open('..\\data\\now_rate.txt', mode='w', encoding='UTF-8') as w:
+		with open('now_rate.txt', mode='w', encoding='UTF-8') as w:
 			w.write(my_rate)
 		
 		result_win_num = '現在の勝利数：-'
-		with open('..\\data\\now_win_num.txt', mode='w', encoding='UTF-8') as w:
+		with open('now_win_num.txt', mode='w', encoding='UTF-8') as w:
 			w.write(result_win_num)
 		
 		result_lose_num = '現在の敗北数：-'
-		with open('..\\data\\now_lose_num.txt', mode='w', encoding='UTF-8') as w:
+		with open('now_lose_num.txt', mode='w', encoding='UTF-8') as w:
 			w.write(result_lose_num)
 		
 		result_total_match_num = '今期の総対戦数：-'
-		with open('..\\data\\now_total_match_num.txt', mode='w', encoding='UTF-8') as w:
+		with open('now_total_match_num.txt', mode='w', encoding='UTF-8') as w:
 			w.write(result_total_match_num)
 		
 		result_my_win_rate = '現在の勝率：- ％'
-		with open('..\\data\\now_my_win_rate.txt', mode='w', encoding='UTF-8') as w:
+		with open('now_my_win_rate.txt', mode='w', encoding='UTF-8') as w:
 			w.write(result_my_win_rate)
 
 	else:
@@ -74,7 +74,7 @@ def get_data(check_status):
 
 def print_data():
 	# base.txt読み込み
-	with open('..\\data\\base.txt', mode='r', encoding='UTF-8') as f:
+	with open('base.txt', mode='r', encoding='UTF-8') as f:
 		mypage_data = f.readlines()
 	
 	# 今期レートの次の行要素を当てる
@@ -89,7 +89,7 @@ def print_data():
 	my_rate = mypage_data[myrate_position]
 	my_rate = my_rate[:4]
 	my_rate = '現在のレート：' + my_rate
-	with open('..\\data\\now_rate.txt', mode='w', encoding='UTF-8') as w:
+	with open('now_rate.txt', mode='w', encoding='UTF-8') as w:
 		w.write(my_rate)
 	
 	# 今期対戦成績の次の行要素を当てる
@@ -106,7 +106,7 @@ def print_data():
 	my_win_num = my_win_num[:win_position]
 
 	result_win_num = '現在の勝利数：' + my_win_num
-	with open('..\\data\\now_win_num.txt', mode='w', encoding='UTF-8') as w:
+	with open('now_win_num.txt', mode='w', encoding='UTF-8') as w:
 		w.write(result_win_num)
 
 	# 今期の負け数を切り出しし書き込み
@@ -116,21 +116,21 @@ def print_data():
 	my_lose_num = my_lose_num[cut_position:lose_position]
 
 	result_lose_num = '現在の敗北数：' + my_lose_num
-	with open('..\\data\\now_lose_num.txt', mode='w', encoding='UTF-8') as w:
+	with open('now_lose_num.txt', mode='w', encoding='UTF-8') as w:
 		w.write(result_lose_num)
 
 	# 今期の対戦総数を算出し書き込み
 	total_match_num = int(my_win_num) + int(my_lose_num)
 	result_total_match_num = '今期の総対戦数：' + str(total_match_num)
 
-	with open('..\\data\\now_total_match_num.txt', mode='w', encoding='UTF-8') as w:
+	with open('now_total_match_num.txt', mode='w', encoding='UTF-8') as w:
 		w.write(result_total_match_num)
 
 	# 今期の勝率を算出し書き込み
 	my_win_rate = round(( int(my_win_num) / int(total_match_num) ) * 100, 2)
 	result_my_win_rate = '現在の勝率：' + str(my_win_rate) + '％'
 
-	with open('..\\data\\now_my_win_rate.txt', mode='w', encoding='UTF-8') as w:
+	with open('now_my_win_rate.txt', mode='w', encoding='UTF-8') as w:
 		w.write(result_my_win_rate)
 
 
