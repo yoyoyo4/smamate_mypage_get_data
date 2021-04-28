@@ -1,15 +1,16 @@
 '''
-スマメイトのマイページから戦績データを取得し、テキストファイルとして定期的に出力するプログラム
-入力 : スマメイトのマイページURL
+スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力するプログラム
+入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
 処理 : マイページにアクセスし戦績情報を抽出、計算
-出力 : マイページURL、今期レート、今期順位、今期勝利数、今期敗北数、連勝数、今期対戦数、今期勝率の各テキストファイル。本pyファイルと同じディレクトリに格納。一定秒数ごとに更新する
+出力1 : smamate_mypage_get_data_textfilesフォルダ。本pyファイルと同じディレクトリに作成
+出力2 : マイページURL、今期レート、今期順位、今期勝利数、今期敗北数、連勝数、今期対戦数、今期勝率の各テキストファイル。一定秒数ごとに更新。smamate_mypage_get_data_textfiles内
 '''
 
 import os, time
 
 import requests
 import PySimpleGUI as sg
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup	
 
 
 # 入力されたURLがスマメイトマイページのものかどうかをTrue/Falseで返す
@@ -21,7 +22,7 @@ def can_access_mypage(mypage_url:str):
 			return True
 		else:
 			raise Exception
-	except:
+	except: # アクセスできない場合orアクセス先のタイトルに｢さんのユーザーページ スマメイト｣が無い場合
 		return False
 
 
@@ -61,8 +62,6 @@ def mypage_URL_input(old_mypage_url:str=""):
 			mypage_url = values['-IN-']
 			if can_access_mypage(mypage_url):
 				window.close()
-				with open('マイページURL.txt', mode='w', encoding='UTF-8') as w: # アクセス確認したマイページURLを出力
-					w.write(mypage_url)
 				return mypage_url
 			else:
 				sg.popup("戦績を取得できません。URLを確認して再入力してください", no_titlebar=True)
@@ -103,13 +102,16 @@ def make_data_dict(mypage_text:str):
 # データ辞書の各値を別々のテキストファイルに出力
 def output_data(data_dict:dict):
 	for s in data_dict.keys():
-		with open(s+'.txt', mode='w', encoding='UTF-8') as w:
+		with open(s +'.txt', mode='w', encoding='UTF-8') as w:
 			w.write(data_dict[s])
 
 
 # アクセス先と次回更新までの秒数を表示しつつ、テキストファイルを更新し続ける
 def update_text_files_while_showing_status(mypage_url:str):
 	mypage_text = fetch_mypage_text(mypage_url)
+	data_dict = make_data_dict(mypage_text)
+	output_data(data_dict)
+
 	soup = BeautifulSoup(mypage_text, "html.parser")
 	access_timeout_sec = 30 # この秒数ごとに更新。30未満の値には設定しないこと！
 	layout = [[sg.Text('以下のページにアクセス中\n\n' + soup.title.text + "\n" + mypage_url + "\n", key="text_access")], 
@@ -126,7 +128,7 @@ def update_text_files_while_showing_status(mypage_url:str):
 		elif event == "アクセスページ変更":
 			old_mypage_url = mypage_url
 			mypage_url = mypage_URL_input(old_mypage_url)
-			if mypage_url == old_mypage_url: # キャンセル連打で連続アクセスしないように処理
+			if mypage_url == old_mypage_url: # 変更連打で連続アクセスしないように処理
 				pass
 			else: # URLを修正して各種変数とテキストファイルを更新
 				mypage_text = fetch_mypage_text(mypage_url)
@@ -147,10 +149,17 @@ def update_text_files_while_showing_status(mypage_url:str):
 
 
 def main():
+	textfile_folder_name = "smamate_mypage_get_data_textfiles"
 	os.chdir(os.path.dirname(os.path.abspath(__file__))) # 本pyファイルのディレクトリに移動
+	os.makedirs(textfile_folder_name, exist_ok=True) # テキストファイル用のフォルダを作成する
+	os.chdir(textfile_folder_name) # テキストファイル用のフォルダに移動
+	
 	mypage_url = existing_mypage_URL() # 保存されたマイページURLを読み込む
 	if not mypage_url: # 読み込めないときは新規入力
 		mypage_url = mypage_URL_input()
+	with open('マイページURL.txt', mode='w', encoding='UTF-8') as w: # マイページURLを出力
+		w.write(mypage_url)
+
 	update_text_files_while_showing_status(mypage_url)
 
 if __name__ == '__main__':
