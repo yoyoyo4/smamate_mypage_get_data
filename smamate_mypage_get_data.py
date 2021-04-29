@@ -1,4 +1,6 @@
 '''
+Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00)
+
 スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力するプログラム
 入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
 処理 : マイページにアクセスし戦績情報を抽出、計算
@@ -152,8 +154,8 @@ def update_text_files_while_showing_status(mypage_url:str):
 
 
 def main():
+	os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合はos.chdir(os.path.dirname(os.path.abspath(__file__)))などに変更
 	textfile_folder_name = "smamate_mypage_get_data_textfiles"
-	os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリ。pyファイルから実行する場合はos.chdir(os.path.dirname(os.path.abspath(__file__)))などに変更
 	os.makedirs(textfile_folder_name, exist_ok=True) # テキストファイル用のフォルダを作成する
 	os.chdir(textfile_folder_name) # テキストファイル用のフォルダに移動
 	
