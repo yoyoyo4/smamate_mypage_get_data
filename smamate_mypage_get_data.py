@@ -154,18 +154,25 @@ def update_text_files_while_showing_status(mypage_url:str):
 
 
 def main():
-	os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合はos.chdir(os.path.dirname(os.path.abspath(__file__)))などに変更
-	textfile_folder_name = "smamate_mypage_get_data_textfiles"
-	os.makedirs(textfile_folder_name, exist_ok=True) # テキストファイル用のフォルダを作成する
-	os.chdir(textfile_folder_name) # テキストファイル用のフォルダに移動
-	
-	mypage_url = existing_mypage_URL() # 保存されたマイページURLを読み込む
-	if not mypage_url: # 読み込めないときは新規入力
-		mypage_url = mypage_URL_input()
-	with open('マイページURL.txt', mode='w', encoding='UTF-8') as w: # マイページURLを出力
-		w.write(mypage_url)
+	try:
+		os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合はos.chdir(os.path.dirname(os.path.abspath(__file__)))などに変更
+		textfile_folder_name = "smamate_mypage_get_data_textfiles"
+		os.makedirs(textfile_folder_name, exist_ok=True) # テキストファイル用のフォルダを作成する
+		os.chdir(textfile_folder_name) # テキストファイル用のフォルダに移動
+		
+		mypage_url = existing_mypage_URL() # 保存されたマイページURLを読み込む
+		if not mypage_url: # 読み込めないときは新規入力
+			mypage_url = mypage_URL_input()
+		with open('マイページURL.txt', mode='w', encoding='UTF-8') as w: # マイページURLを出力
+			w.write(mypage_url)
 
-	update_text_files_while_showing_status(mypage_url)
+		update_text_files_while_showing_status(mypage_url)
+
+	except SystemExit: # sys.exit()
+		pass
+
+	except: # 何らかの想定外エラー
+		sg.popup("エラーが発生しました\nexeファイルを別のディレクトリに置いて実行してみてください", no_titlebar=True)
 
 if __name__ == '__main__':
-    main()
+	main()
