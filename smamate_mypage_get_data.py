@@ -6,7 +6,7 @@
 出力2 : マイページURL、今期レート、今期順位、今期勝利数、今期敗北数、連勝数、今期対戦数、今期勝率の各テキストファイル。一定秒数ごとに更新。smamate_mypage_get_data_textfiles内
 '''
 
-import os, time
+import os, sys, time
 
 import requests
 import PySimpleGUI as sg
@@ -57,7 +57,7 @@ def mypage_URL_input(old_mypage_url:str=""):
 			if old_mypage_url: # 修正用のウィンドウを閉じたかキャンセルした場合、元々のURLを返す
 				return old_mypage_url
 			else: # 修正用ではないウィンドウが閉じられた場合、プログラム全体を終了
-				exit()
+				sys.exit() # sys.exit()でないとexe化後にエラーウィンドウが出る
 		elif event == "OK":
 			mypage_url = values['-IN-']
 			if can_access_mypage(mypage_url):
@@ -114,7 +114,8 @@ def update_text_files_while_showing_status(mypage_url:str):
 
 	soup = BeautifulSoup(mypage_text, "html.parser")
 	access_timeout_sec = 30 # この秒数ごとに更新。30未満の値には設定しないこと！
-	layout = [[sg.Text('以下のページにアクセス中\n\n' + soup.title.text + "\n" + mypage_url + "\n", key="text_access")], 
+	layout = [[sg.Text('アクセス先\n' + soup.title.text + "\n" + mypage_url + "\n", key="text_access")], 
+				[sg.Text('テキストファイル出力先\n' + os.getcwd() + "\n")],
 				[sg.Text('次回更新まであと' + str(access_timeout_sec) + "秒", key="text_update")], 
 				[sg.Button('終了'), sg.Button('アクセスページ変更')]]
 	window = sg.Window('smamate_mypage_get_data', layout)
@@ -123,7 +124,7 @@ def update_text_files_while_showing_status(mypage_url:str):
 	while True:
 		event, _ = window.read(timeout=100)
 		if event in [sg.WIN_CLOSED, "終了"]: # ウィンドウを閉じたor終了を押したとき、プログラム全体を終了
-			exit()
+			sys.exit()
 
 		elif event == "アクセスページ変更":
 			old_mypage_url = mypage_url
@@ -135,7 +136,7 @@ def update_text_files_while_showing_status(mypage_url:str):
 				data_dict = make_data_dict(mypage_text)
 				output_data(data_dict)
 				soup = BeautifulSoup(mypage_text, "html.parser")
-				window['text_access'].update('以下のページにアクセス中\n\n' + soup.title.text + "\n" + mypage_url + "\n")
+				window['text_access'].update('アクセス先\n' + soup.title.text + "\n" + mypage_url + "\n")
 
 		elif access_timeout_sec <= int(time.time()) - start_time: # 更新秒数以上経ったらテキストファイルを更新
 			mypage_text = fetch_mypage_text(mypage_url)
