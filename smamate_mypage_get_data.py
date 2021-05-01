@@ -117,7 +117,7 @@ def update_text_files_while_showing_status(mypage_url:str):
 	soup = BeautifulSoup(mypage_text, "html.parser")
 	access_timeout_sec = 30 # この秒数ごとに更新。30未満の値には設定しないこと！
 	layout = [[sg.Text('アクセス先\n' + soup.title.text + "\n" + mypage_url + "\n", key="text_access")], 
-				[sg.Text('テキストファイル出力先\n' + os.getcwd() + "\n")],
+				[sg.Text('下記フォルダにテキストファイルを出力中\n配信ソフトのテキストオブジェクトのソースとして設定してください\n' + os.getcwd() + "\n")],
 				[sg.Text('次回更新まであと' + str(access_timeout_sec) + "秒", key="text_update")], 
 				[sg.Button('終了'), sg.Button('アクセスページ変更')]]
 	window = sg.Window('smamate_mypage_get_data', layout)
