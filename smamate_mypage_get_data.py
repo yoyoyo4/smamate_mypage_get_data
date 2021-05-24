@@ -5,7 +5,7 @@ Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00)
 入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
 処理 : マイページにアクセスし戦績情報を抽出、計算
 出力1 : output_smamate_mypage_get_dataフォルダ。exeファイルと同じディレクトリに作成
-出力2 : 設定、レート、順位、勝利数、敗北数、連勝数、対戦数、勝率の各ファイル。一定秒数ごとに更新。output_smamate_mypage_get_data内
+出力2 : 設定、レート、順位、前日比、勝利数、敗北数、連勝数、対戦数、勝率の各ファイル。一定秒数ごとに更新。output_smamate_mypage_get_data内
 """
 
 import os, sys, time, webbrowser, pickle
@@ -126,10 +126,10 @@ def make_data_dict(mypage_text:str):
 	record_text = BeautifulSoup(record_text,"html.parser").get_text(strip=True).replace("\t","") # 例:レーティング対戦今期レート1357 (12035位)前日比：-17今期対戦成績43勝 55敗現在2連勝！動画化許可する
 	data_dict = {}
 	data_dict["今期レート"] = record_text[record_text.find("今期レート")+5:record_text.find("今期レート")+9]
-	if data_dict["今期レート"] == "": # 0戦状態のとき
-		data_dict = {"今期レート":"1500", "今期順位":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
-	else:
+	
+	if data_dict["今期レート"].isdecimal(): # 0戦状態でないとき
 		data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
+		data_dict["前日比"] = record_text[record_text.find("前日比：")+4:record_text.find("今期対戦成績")]
 		data_dict["今期勝利数"] = record_text[record_text.find("今期対戦成績")+6:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
 		data_dict["今期敗北数"] = record_text[record_text.find("勝")+2:record_text.find("敗")]
 
@@ -141,6 +141,8 @@ def make_data_dict(mypage_text:str):
 
 		data_dict["今期対戦数"] = str(int(data_dict["今期勝利数"]) + int(data_dict["今期敗北数"]))
 		data_dict["今期勝率"] = str(int(round(100*int(data_dict["今期勝利数"])/int(data_dict["今期対戦数"])))) + "%"
+	else:
+		data_dict = {"今期レート":"1500", "今期順位":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
 
 	return data_dict
 
@@ -203,7 +205,8 @@ def update_text_files_while_showing_status(mypage_url:str):
 def main():
 	global settings_dict
 	try:
-		os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合はos.chdir(os.path.dirname(os.path.abspath(__file__)))などに変更
+		os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合は1行下のコードに変更
+		# os.chdir(os.path.dirname(os.path.abspath(__file__)))
 		textfile_folder_name = "output_smamate_mypage_get_data"
 		os.makedirs(textfile_folder_name, exist_ok=True)
 		os.chdir(textfile_folder_name) # 出力用のフォルダを作成して移動
@@ -226,10 +229,11 @@ def main():
 		pass
 
 	except: # 何らかの想定外エラー
-		sg.popup("エラーが発生しました。下記の方法を試してください\
+		sg.popup("エラーが発生しました。下記の方法を試して再実行してください\
 			\n-exeファイルを別のディレクトリに置いて実行する\
+			\n-output_smamate_mypage_get_dataフォルダを削除する\
 			\n-セキュリティソフトの設定でsmamate_mypage_get_data.exeの動作を許可する\
-			\n-exeファイルを右クリック→｢管理者として実行(A)｣を選択\
+			\n-exeファイルを右クリック→｢管理者として実行(A)｣を選択する\
 			\n\nエラー詳細\n"\
 			+ str(sys.exc_info()[0]) + "\n" + str(sys.exc_info()[2].tb_lineno), no_titlebar=True)
 
