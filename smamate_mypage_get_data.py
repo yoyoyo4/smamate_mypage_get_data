@@ -138,7 +138,7 @@ def make_data_dict(mypage_text:str):
 		if 0 < winning_streak_idx:
 			data_dict["連勝数"] = record_text[record_text.find("現在")+2:winning_streak_idx]
 		else:
-			data_dict["連勝数"] = "0"
+			data_dict["連勝数"] = "-"
 
 		if 0 < record_text.find("前日比"): # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
 			data_dict["前日比"] = record_text[record_text.find("前日比：")+4:record_text.find("今期対戦成績")]
@@ -146,7 +146,7 @@ def make_data_dict(mypage_text:str):
 			data_dict["前日比"] = "-"
 
 	else:
-		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
+		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
 
 	return data_dict
 
