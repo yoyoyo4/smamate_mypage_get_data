@@ -129,9 +129,10 @@ def make_data_dict(mypage_text:str):
 	
 	if data_dict["今期レート"].isdecimal(): # 0戦状態でないとき
 		data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
-		data_dict["前日比"] = record_text[record_text.find("前日比：")+4:record_text.find("今期対戦成績")]
 		data_dict["今期勝利数"] = record_text[record_text.find("今期対戦成績")+6:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
 		data_dict["今期敗北数"] = record_text[record_text.find("勝")+2:record_text.find("敗")]
+		data_dict["今期対戦数"] = str(int(data_dict["今期勝利数"]) + int(data_dict["今期敗北数"]))
+		data_dict["今期勝率"] = str(int(round(100*int(data_dict["今期勝利数"])/int(data_dict["今期対戦数"])))) + "%"
 
 		winning_streak_idx = record_text.find("連勝") # ｢連勝｣の表記があれば連勝中
 		if 0 < winning_streak_idx:
@@ -139,8 +140,11 @@ def make_data_dict(mypage_text:str):
 		else:
 			data_dict["連勝数"] = "0"
 
-		data_dict["今期対戦数"] = str(int(data_dict["今期勝利数"]) + int(data_dict["今期敗北数"]))
-		data_dict["今期勝率"] = str(int(round(100*int(data_dict["今期勝利数"])/int(data_dict["今期対戦数"])))) + "%"
+		if record_text.find("前日比"): # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
+			data_dict["前日比"] = record_text[record_text.find("前日比：")+4:record_text.find("今期対戦成績")]
+		else:
+			data_dict["前日比"] = "-"
+
 	else:
 		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
 
