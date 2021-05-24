@@ -140,7 +140,7 @@ def make_data_dict(mypage_text:str):
 		else:
 			data_dict["連勝数"] = "0"
 
-		if record_text.find("前日比"): # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
+		if 0 < record_text.find("前日比"): # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
 			data_dict["前日比"] = record_text[record_text.find("前日比：")+4:record_text.find("今期対戦成績")]
 		else:
 			data_dict["前日比"] = "-"
@@ -209,8 +209,8 @@ def update_text_files_while_showing_status(mypage_url:str):
 def main():
 	global settings_dict
 	try:
-		os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合は1行下のコードに変更
 		# os.chdir(os.path.dirname(os.path.abspath(__file__)))
+		os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合は1行上のコードに変更
 		textfile_folder_name = "output_smamate_mypage_get_data"
 		os.makedirs(textfile_folder_name, exist_ok=True)
 		os.chdir(textfile_folder_name) # 出力用のフォルダを作成して移動
