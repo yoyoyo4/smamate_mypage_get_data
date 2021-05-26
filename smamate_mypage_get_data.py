@@ -209,8 +209,8 @@ def update_text_files_while_showing_status(mypage_url:str):
 def main():
 	global settings_dict
 	try:
-		# os.chdir(os.path.dirname(os.path.abspath(__file__)))
-		os.chdir(os.path.dirname(sys.executable)) # exeファイルのディレクトリに移動。pyファイルから実行する場合は1行上のコードに変更
+		# os.chdir(os.path.dirname(sys.executable)) # exeファイルから実行する場合のディレクトリ移動。pyファイルから実行する場合は不要
+		os.chdir(os.path.dirname(os.path.abspath(__file__))) # pyファイルから直接実行する場合のディレクトリ移動。exe化時は不要
 		textfile_folder_name = "output_smamate_mypage_get_data"
 		os.makedirs(textfile_folder_name, exist_ok=True)
 		os.chdir(textfile_folder_name) # 出力用のフォルダを作成して移動
@@ -227,6 +227,7 @@ def main():
 		with open("settings.pkl","wb") as f: # 設定辞書を保存
 			pickle.dump(settings_dict, f)
 
+		raise Exception
 		update_text_files_while_showing_status(mypage_url)
 
 	except SystemExit: # sys.exit()
