@@ -121,13 +121,15 @@ def fetch_mypage_text(mypage_url:str):
 
 
 # マイページのHTMLテキストから、出力するデータの辞書を作成して返す
+# データ取得に完全に失敗した場合、空の辞書を返す
 def make_data_dict(mypage_text:str):
 	record_text = mypage_text[mypage_text.find("<h2>レーティング対戦</h2>"):mypage_text.find("""<h2 class="mt-5">プロフィール</h2>""")] # 戦績だけ抽出
 	record_text = BeautifulSoup(record_text,"html.parser").get_text(strip=True).replace("\t","") # 例:レーティング対戦今期レート1357 (12035位)前日比：-17今期対戦成績43勝 55敗現在2連勝！動画化許可する
 	data_dict = {}
-	data_dict["今期レート"] = record_text[record_text.find("今期レート")+5:record_text.find("今期レート")+9]
+	rate_idx = record_text.find("今期レート")
 	
-	if data_dict["今期レート"].isdecimal(): # 0戦状態でないとき
+	if 0 < rate_idx: # 対戦記録があるとき
+		data_dict["今期レート"] = record_text[rate_idx+5:rate_idx+9]
 		data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
 		data_dict["今期勝利数"] = record_text[record_text.find("今期対戦成績")+6:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
 		data_dict["今期敗北数"] = record_text[record_text.find("勝")+2:record_text.find("敗")]
@@ -140,13 +142,22 @@ def make_data_dict(mypage_text:str):
 		else:
 			data_dict["連勝数"] = "-"
 
-		if 0 < record_text.find("前日比"): # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
-			data_dict["前日比"] = record_text[record_text.find("前日比：")+4:record_text.find("今期対戦成績")]
+		comp_idx = record_text.find("前日比：") # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
+		if 0 < comp_idx:
+			data_dict["前日比"] = record_text[comp_idx+4:record_text.find("今期対戦成績")]
 		else:
 			data_dict["前日比"] = "-"
 
-	else:
+	elif 0 < record_text.find("初期レート"): # サブシーズン0戦状態
+		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
+		ini_rate_idx = record_text.find("初期レート")
+		data_dict["今期レート"] = record_text[ini_rate_idx+5:ini_rate_idx+9] # 初期レートを今期レートとして表示
+
+	elif 0 < record_text.find("レーティング対戦"): # メインシーズン0戦状態
 		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
+
+	else: # 全くデータを取得できなかったとき。混雑時の専用ページを想定
+		data_dict = {}
 
 	return data_dict
 
@@ -169,7 +180,8 @@ def update_text_files_while_showing_status(mypage_url:str):
 	soup = BeautifulSoup(mypage_text, "html.parser")
 	access_timeout_sec = 30 # この秒数ごとに更新。30未満の値には設定しないこと！
 	layout = [[sg.Text("アクセス先\n" + soup.title.text + "\n" + mypage_url + "\n", key="text_access")],
-				[sg.Text("下記フォルダにテキストファイルを出力中\n配信ソフトのテキストオブジェクトのソースとして設定してください\n" + os.getcwd() + "\n")],
+				[sg.Text("下記フォルダにテキストファイルを出力中\n配信ソフトのテキストオブジェクトのソースとして設定してください\n" + os.getcwd())],
+				[sg.Text("                                                                        ", key="error_msg")], # 最初に文字列スペースを確保する
 				[sg.Text("次回更新まであと" + str(access_timeout_sec) + "秒", key="text_update")],
 				[sg.Button("終了"), sg.Button("アクセスページ変更")]]
 	window = sg.Window(this_software_name, layout)
@@ -195,10 +207,14 @@ def update_text_files_while_showing_status(mypage_url:str):
 				soup = BeautifulSoup(mypage_text, "html.parser")
 				window["text_access"].update("アクセス先\n" + soup.title.text + "\n" + mypage_url + "\n")
 
-		elif access_timeout_sec <= int(time.time()) - start_time: # 更新秒数以上経ったらマイページURL以外のテキストファイルを更新
+		elif access_timeout_sec <= int(time.time()) - start_time: # 更新秒数以上経ったらテキストファイルを更新
 			mypage_text = fetch_mypage_text(mypage_url)
 			data_dict = make_data_dict(mypage_text)
-			output_data(data_dict)
+			if len(data_dict):
+				output_data(data_dict)
+				window["error_msg"].update("")
+			else: # データを取得できなかったとき、その旨を表示して更新をスキップする
+				window["error_msg"].update("※前回の更新に失敗しました")
 			start_time = int(time.time())
 
 		else:
