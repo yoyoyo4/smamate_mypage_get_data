@@ -60,6 +60,7 @@ def gonna_update():
 				window.close()
 				return False
 			elif event == "スキップ(次回から確認しない)": # 今後もアップデートしない場合、設定辞書に反映
+				window.close()
 				settings_dict["check_update"] = False
 				return False
 			elif event == "ダウンロード": # 規定のブラウザでアップデートzipファイルのURLを直接開き、ダウンロードする。レポジトリのページも開く
