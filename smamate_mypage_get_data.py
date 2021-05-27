@@ -227,7 +227,6 @@ def main():
 		with open("settings.pkl","wb") as f: # 設定辞書を保存
 			pickle.dump(settings_dict, f)
 
-		raise Exception
 		update_text_files_while_showing_status(mypage_url)
 
 	except SystemExit: # sys.exit()
