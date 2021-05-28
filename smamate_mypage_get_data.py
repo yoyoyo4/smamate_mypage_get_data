@@ -15,7 +15,7 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup
 
 
-this_software_ver = "ver2.01"
+this_software_ver = "2.01"
 this_software_name = "smamate_mypage_get_data"
 default_settings_dict = {"check_update":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
@@ -42,14 +42,14 @@ def gonna_update():
 			soup = BeautifulSoup(html.text, "html.parser")
 			latest_ver = str(soup)
 			latest_ver = latest_ver[latest_ver.find("■最新バージョン"):latest_ver.find("■更新履歴")]
-			latest_ver = latest_ver[latest_ver.find("ver"):latest_ver.find(".")+3] # READMEの最新バージョン欄から"ver?.??の表記を抜き出す"
+			latest_ver = latest_ver[latest_ver.find("ver")+3:latest_ver.find(".")+3] # READMEの最新バージョン欄ver?.??の?.??の表記を抜き出す
 		except: # アクセス失敗など
 			return False
 
-		if this_software_ver == latest_ver: # 最新版を使っている場合
+		if float(this_software_ver) >= float(latest_ver): # 最新版を使っている場合
 			return False
 
-		layout = [[sg.Text(latest_ver + "が公開されています。ダウンロードしますか？")],
+		layout = [[sg.Text("ver" + latest_ver + "が公開されています。ダウンロードしますか？")],
 				[sg.Button("スキップ", bind_return_key=True), sg.Button("スキップ(次回から確認しない)"), sg.Button("ダウンロード")]]
 		window = sg.Window(this_software_name, layout)
 		while True:
@@ -68,10 +68,10 @@ def gonna_update():
 				try:
 					webbrowser.open("https://github.com/yoyoyo4/smamate_mypage_get_data")
 					webbrowser.open("https://github.com/yoyoyo4/smamate_mypage_get_data/archive/refs/heads/master.zip")
-					sg.popup(latest_ver+"のzipファイルをダウンロードしました。解凍して使用してください\nプログラムを終了します", no_titlebar=True)
+					sg.popup("ver"+latest_ver+"のzipファイルをダウンロードしました。解凍して使用してください\nプログラムを終了します", no_titlebar=True)
 					return True
 				except:
-					sg.popup(latest_ver+"のダウンロードに失敗しました\nアップデートせずプログラムを続行します", no_titlebar=True)
+					sg.popup("ver"+latest_ver+"のダウンロードに失敗しました\nアップデートせずプログラムを続行します", no_titlebar=True)
 					return False
 
 
