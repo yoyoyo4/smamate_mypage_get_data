@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00)
+Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.01)
 
 スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力するプログラム
 入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
@@ -15,7 +15,7 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup
 
 
-this_software_ver = "ver2.00"
+this_software_ver = "ver2.01"
 this_software_name = "smamate_mypage_get_data"
 default_settings_dict = {"check_update":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
