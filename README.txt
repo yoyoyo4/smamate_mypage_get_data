@@ -57,7 +57,7 @@ Windows10 64bit
 
 ■ライセンス
 smamate_mypage_get_data
-Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.01)
+Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.02)
 
 smamate_mypage_get_data.exe(以下｢本ソフトウェア｣といいます)の無償使用を許可します。
 本ソフトウェアは、のちょう氏(スマメイト運営、Twitter:@noticoco)、任天堂株式会社および他関連企業の著作物ではありません。
