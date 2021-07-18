@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.01)
+Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.02)
 
 スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力するプログラム
 入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
@@ -15,7 +15,7 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup
 
 
-this_software_ver = "2.01"
+this_software_ver = "2.02"
 this_software_name = "smamate_mypage_get_data"
 default_settings_dict = {"check_update":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
@@ -154,7 +154,7 @@ def make_data_dict(mypage_text:str):
 		ini_rate_idx = record_text.find("初期レート")
 		data_dict["今期レート"] = record_text[ini_rate_idx+5:ini_rate_idx+9] # 初期レートを今期レートとして表示
 
-	elif 0 < record_text.find("レーティング対戦"): # メインシーズン0戦状態
+	elif 0 < mypage_text.find("MATE ID"): # メインシーズン0戦状態
 		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
 
 	else: # 全くデータを取得できなかったとき。混雑時の専用ページを想定
