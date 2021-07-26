@@ -128,10 +128,20 @@ def make_data_dict(mypage_text:str):
 	record_text = BeautifulSoup(record_text,"html.parser").get_text(strip=True).replace("\t","") # 例:レーティング対戦今期レート1357 (12035位)前日比：-17今期対戦成績43勝 55敗現在2連勝！動画化許可する
 	data_dict = {}
 	rate_idx = record_text.find("今期レート")
+	rate_txt = record_text[rate_idx+5:rate_idx+9]
 	
 	if 0 < rate_idx: # 対戦記録があるとき
-		data_dict["今期レート"] = record_text[rate_idx+5:rate_idx+9]
-		data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
+		if rate_txt.isdecimal(): # レート表示時
+			data_dict["今期レート"] = rate_txt
+			data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
+			comp_idx = record_text.find("前日比：") # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
+			if 0 < comp_idx:
+				data_dict["前日比"] = record_text[comp_idx+4:record_text.find("今期対戦成績")]
+			else:
+				data_dict["前日比"] = "-"
+		else: # レート非表示の場合、レートの数値部分が空欄になり、順位と前日比の表記がなくなる
+			data_dict["今期レート"], data_dict["今期順位"], data_dict["前日比"] = "-", "-", "-"
+
 		data_dict["今期勝利数"] = record_text[record_text.find("今期対戦成績")+6:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
 		data_dict["今期敗北数"] = record_text[record_text.find("勝")+2:record_text.find("敗")]
 		data_dict["今期対戦数"] = str(int(data_dict["今期勝利数"]) + int(data_dict["今期敗北数"]))
@@ -142,12 +152,6 @@ def make_data_dict(mypage_text:str):
 			data_dict["連勝数"] = record_text[record_text.find("現在")+2:winning_streak_idx]
 		else:
 			data_dict["連勝数"] = "-"
-
-		comp_idx = record_text.find("前日比：") # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
-		if 0 < comp_idx:
-			data_dict["前日比"] = record_text[comp_idx+4:record_text.find("今期対戦成績")]
-		else:
-			data_dict["前日比"] = "-"
 
 	elif 0 < record_text.find("初期レート"): # サブシーズン0戦状態
 		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
