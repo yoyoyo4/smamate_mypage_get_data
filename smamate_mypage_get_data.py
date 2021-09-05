@@ -146,7 +146,7 @@ def make_data_dict(mypage_text:str):
 		if 0 < winning_streak_idx:
 			data_dict["連勝数"] = record_text[record_text.find("現在")+2:winning_streak_idx]
 		else:
-			data_dict["連勝数"] = "0"
+			data_dict["連勝数"] = "-" # 0勝と1勝の場合があるので-表記にする
 
 		comp_idx = record_text.find("前日比：") # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
 		if 0 < comp_idx:
@@ -155,12 +155,12 @@ def make_data_dict(mypage_text:str):
 			data_dict["前日比"] = "-"
 
 	elif 0 < record_text.find("初期レート"): # サブシーズン0戦状態
-		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
+		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
 		ini_rate_idx = record_text.find("初期レート")
 		data_dict["今期レート"] = record_text[ini_rate_idx+5:ini_rate_idx+9] # 初期レートを今期レートとして表示
 
 	elif 0 < mypage_text.find("MATE ID"): # メインシーズン0戦状態
-		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
+		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
 
 	else: # 全くデータを取得できなかったとき。混雑時の専用ページを想定
 		data_dict = {}
