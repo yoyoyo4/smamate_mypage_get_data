@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.02)
+Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.03)
 
 スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力するプログラム
 入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
@@ -15,7 +15,7 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup
 
 
-this_software_ver = "2.02"
+this_software_ver = "2.03"
 this_software_name = "smamate_mypage_get_data"
 default_settings_dict = {"check_update":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
@@ -131,17 +131,22 @@ def make_data_dict(mypage_text:str):
 	
 	if 0 < rate_idx: # 対戦記録があるとき
 		data_dict["今期レート"] = record_text[rate_idx+5:rate_idx+9]
-		data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
 		data_dict["今期勝利数"] = record_text[record_text.find("今期対戦成績")+6:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
 		data_dict["今期敗北数"] = record_text[record_text.find("勝")+2:record_text.find("敗")]
 		data_dict["今期対戦数"] = str(int(data_dict["今期勝利数"]) + int(data_dict["今期敗北数"]))
 		data_dict["今期勝率"] = str(int(round(100*int(data_dict["今期勝利数"])/int(data_dict["今期対戦数"])))) + "%"
 
+		rank_idx = record_text.find("位") # ｢位｣の文字があれば順位あり。サブアカの場合は無い
+		if 0 < rank_idx:
+			data_dict["今期順位"] = record_text[record_text.find("(")+1:record_text.find("位")]
+		else:
+			data_dict["今期順位"] = "-"
+
 		winning_streak_idx = record_text.find("連勝") # ｢連勝｣の表記があれば連勝中
 		if 0 < winning_streak_idx:
 			data_dict["連勝数"] = record_text[record_text.find("現在")+2:winning_streak_idx]
 		else:
-			data_dict["連勝数"] = "-"
+			data_dict["連勝数"] = "0"
 
 		comp_idx = record_text.find("前日比：") # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
 		if 0 < comp_idx:
@@ -150,12 +155,12 @@ def make_data_dict(mypage_text:str):
 			data_dict["前日比"] = "-"
 
 	elif 0 < record_text.find("初期レート"): # サブシーズン0戦状態
-		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
+		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
 		ini_rate_idx = record_text.find("初期レート")
 		data_dict["今期レート"] = record_text[ini_rate_idx+5:ini_rate_idx+9] # 初期レートを今期レートとして表示
 
 	elif 0 < mypage_text.find("MATE ID"): # メインシーズン0戦状態
-		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
+		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"0", "今期対戦数":"0", "今期勝率":"0%"}
 
 	else: # 全くデータを取得できなかったとき。混雑時の専用ページを想定
 		data_dict = {}
