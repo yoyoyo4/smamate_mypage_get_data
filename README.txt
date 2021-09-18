@@ -1,5 +1,7 @@
 ■ダウンロード/アップデート方法
-下記リンク先にて、右上緑色のCodeボタン→Download Zipをクリック。ダウンロードしたZipファイルを解凍
+1. ソフト配布ページにて、右上緑色のCodeボタン→Download Zipをクリック
+2. ダウンロードしたZipファイルを解凍
+3. (旧ソフトを上書き)
 https://github.com/yoyoyo4/smamate_mypage_get_data 
 
 ■最新バージョン
