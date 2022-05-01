@@ -10,7 +10,7 @@ Copyright (C) 2022 ほーずき(ver1.00-1.04)、YON(ver2.00-2.11)
 
 
 
-import os, sys, time, webbrowser, pickle
+import os, sys, time, webbrowser, pickle, json
 
 import requests
 import PySimpleGUI as sg
@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 
 execute_from_pyfile = True # pyファイルから実行するかどうか。exe化するときFalseにする
 
-this_software_ver = "2.11"
+this_software_ver = 2.11
 this_software_name = "smamate_mypage_get_data"
 default_settings_dict = {"check_update":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
@@ -47,16 +47,16 @@ def gonna_update():
 	global settings_dict
 	if settings_dict["check_update"]:
 		try:
-			check_url = "https://raw.githubusercontent.com/yoyoyo4/smamate_mypage_get_data/master/README.txt"
+			check_url = "https://api.github.com/repos/yoyoyo4/smamate_mypage_get_data/releases/latest"
 			html = requests.get(check_url)
 			soup = BeautifulSoup(html.text, "html.parser")
-			latest_ver = str(soup)
-			latest_ver = latest_ver[latest_ver.find("■最新バージョン"):latest_ver.find("■更新履歴")]
-			latest_ver = latest_ver[latest_ver.find("ver")+3:latest_ver.find(".")+3] # READMEの最新バージョン欄ver?.??の?.??の表記を抜き出す
+			json_dict = json.loads(str(soup))
+			latest_ver = json_dict["name"]
+			latest_ver = float(latest_ver[latest_ver.find("ver")+3:latest_ver.find(".")+3]) # READMEの最新バージョン欄ver?.??の?.??の表記を抜き出す
 		except: # アクセス失敗など
 			return False
 
-		if float(this_software_ver) >= float(latest_ver): # 最新版を使っている場合
+		if this_software_ver >= latest_ver: # 最新版を使っている場合
 			return False
 
 		layout = [[sg.Text("ver" + latest_ver + "が公開されています。ダウンロードしますか？")],
