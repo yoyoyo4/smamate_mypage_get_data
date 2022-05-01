@@ -1,12 +1,14 @@
 """
-Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.03)
+Copyright (C) 2021 ほーずき(ver1.00-1.04)、YON(ver2.00-2.10)
 
-スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力するプログラム
-入力 : スマメイトのマイページURL 例:https://smashmate.net/user/23240/
+スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力する
+入力 : スマメイトのマイページURL
 処理 : マイページにアクセスし戦績情報を抽出、計算
 出力1 : output_smamate_mypage_get_dataフォルダ。exeファイルと同じディレクトリに作成
 出力2 : 設定、レート、順位、前日比、勝利数、敗北数、連勝数、対戦数、勝率の各ファイル。一定秒数ごとに更新。output_smamate_mypage_get_data内
 """
+
+
 
 import os, sys, time, webbrowser, pickle
 
@@ -15,14 +17,19 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup
 
 
-this_software_ver = "2.03"
+execute_from_pyfile = True # pyファイルから実行するかどうか。exe化するときFalseにする
+
+this_software_ver = "2.10"
 this_software_name = "smamate_mypage_get_data"
 default_settings_dict = {"check_update":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
 
 
-# 設定を記録した辞書を返す。見つからない場合は初期設定辞書を返す
+
 def load_settings():
+	"""
+	設定を記録した辞書を返す。見つからない場合は初期設定辞書を返す
+	"""
 	try:
 		with open("settings.pkl", "rb") as f:
 			return pickle.load(f)
@@ -30,10 +37,13 @@ def load_settings():
 		return default_settings_dict.copy()
 
 
-# 現verより新しいverが見つかった場合、アップデート確認ポップアップを出す
-# アップデートする場合、最新版のzipファイルを規定のブラウザでDLしてTrueを返す
-# アップデートしない場合、現verが最新と確認できた場合、確認不能の場合、Falseを返す
+
 def gonna_update():
+	"""
+	現verより新しいverが見つかった場合、アップデート確認ポップアップを出す
+	アップデートする場合、最新版のzipファイルを規定のブラウザでDLしてTrueを返す
+	アップデートしない場合、現verが最新と確認できた場合、確認不能の場合、Falseを返す
+	"""
 	global settings_dict
 	if settings_dict["check_update"]:
 		try:
@@ -53,7 +63,7 @@ def gonna_update():
 				[sg.Button("スキップ", bind_return_key=True), sg.Button("スキップ(次回から確認しない)"), sg.Button("ダウンロード")]]
 		window = sg.Window(this_software_name, layout)
 		while True:
-			event, values = window.read()
+			event, _ = window.read()
 			if event == sg.WIN_CLOSED:
 				sys.exit()
 			elif event == "スキップ":
@@ -75,8 +85,11 @@ def gonna_update():
 					return False
 
 
-# 入力されたURLがスマメイトマイページのものかどうかをTrue/Falseで返す
+
 def can_access_mypage(mypage_url:str):
+	"""
+	入力されたURLがスマメイトマイページのものかどうかをTrue/Falseで返す
+	"""
 	try:
 		html = requests.get(mypage_url)
 		soup = BeautifulSoup(html.text,"html.parser")
@@ -88,12 +101,15 @@ def can_access_mypage(mypage_url:str):
 		return False
 
 
-# マイページ入力ウィンドウを表示し、入力URLからHTMLテキストを取得できるか確認する
-# 成功した場合、入力URLをテキストファイルに保存し、入力URLをそのまま返す
-# 失敗した場合、URL再入力を求める
-# URL修正用にする場合は、old_mypage_urlに修正前のマイページURLを入力する
-# 修正用の場合、入力ウィンドウを☓で閉じた場合に修正前のURLを返す
+
 def mypage_URL_input(old_mypage_url:str=""):
+	"""
+	マイページ入力ウィンドウを表示し、入力URLからHTMLテキストを取得できるか確認する
+	成功した場合、入力URLをテキストファイルに保存し、入力URLをそのまま返す
+	失敗した場合、URL再入力を求める
+	URL修正用にする場合は、old_mypage_urlに修正前のマイページURLを入力する
+	修正用の場合、入力ウィンドウを☓で閉じた場合に修正前のURLを返す
+	"""
 	layout = [[sg.Text("スマメイトのマイページURLを入力してください\n例:https://smashmate.net/user/23240/")],
 				[sg.Input(key="-IN-")],
 				[sg.Button("OK", bind_return_key=True)]]
@@ -114,24 +130,30 @@ def mypage_URL_input(old_mypage_url:str=""):
 				sg.popup("戦績を取得できません。マイページのURLを確認して再入力してください", no_titlebar=True)
 
 
-# マイページURLにアクセスし、HTMLテキストを返す
+
 def fetch_mypage_text(mypage_url:str):
+	"""
+	マイページURLにアクセスし、HTMLテキストを返す
+	"""
 	html = requests.get(mypage_url)
 	soup = BeautifulSoup(html.text, "html.parser")
 	return str(soup)
 
 
-# マイページのHTMLテキストから、出力するデータの辞書を作成して返す
-# データ取得に完全に失敗した場合、空の辞書を返す
+
 def make_data_dict(mypage_text:str):
-	record_text = mypage_text[mypage_text.find("<h2>レーティング対戦</h2>"):mypage_text.find("""<h2 class="mt-5">プロフィール</h2>""")] # 戦績だけ抽出
-	record_text = BeautifulSoup(record_text,"html.parser").get_text(strip=True).replace("\t","") # 例:レーティング対戦今期レート1357 (12035位)前日比：-17今期対戦成績43勝 55敗現在2連勝！動画化許可する
+	"""
+	マイページのHTMLテキストから、出力するデータの辞書を作成して返す
+	データ取得に完全に失敗した場合、空の辞書を返す
+	"""
+	record_text = mypage_text[mypage_text.find("<h2>レーティング対戦</h2>"):mypage_text.find("""<h2 class="mt-5">プロフィール</h2>""")] # レーティング対戦項目だけ抽出
+	record_text = BeautifulSoup(record_text,"html.parser").get_text(strip=True).replace("\t","") # 例:レーティング対戦現在レート1586 (50位)前日比：+86最高レート1586対戦成績8勝 2敗現在2連勝！動画化許可する
 	data_dict = {}
-	rate_idx = record_text.find("今期レート")
+	rate_idx = record_text.find("現在レート")
 	
 	if 0 < rate_idx: # 対戦記録があるとき
-		data_dict["今期レート"] = record_text[rate_idx+5:rate_idx+9]
-		data_dict["今期勝利数"] = record_text[record_text.find("今期対戦成績")+6:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
+		data_dict["現在レート"] = record_text[rate_idx+5:rate_idx+9]
+		data_dict["今期勝利数"] = record_text[record_text.find("対戦成績")+4:record_text.find("勝")] # ｢連勝｣の｢勝｣もあるが、より手前にある戦績の｢勝｣がヒットする
 		data_dict["今期敗北数"] = record_text[record_text.find("勝")+2:record_text.find("敗")]
 		data_dict["今期対戦数"] = str(int(data_dict["今期勝利数"]) + int(data_dict["今期敗北数"]))
 		data_dict["今期勝率"] = str(int(round(100*int(data_dict["今期勝利数"])/int(data_dict["今期対戦数"])))) + "%"
@@ -144,23 +166,23 @@ def make_data_dict(mypage_text:str):
 
 		winning_streak_idx = record_text.find("連勝") # ｢連勝｣の表記があれば連勝中
 		if 0 < winning_streak_idx:
-			data_dict["連勝数"] = record_text[record_text.find("現在")+2:winning_streak_idx]
+			data_dict["連勝数"] = record_text[record_text.find("敗現在")+3:winning_streak_idx] # 現在レートを取得しないよう｢負現在｣で検索。0敗でも敗北数は表示される
 		else:
 			data_dict["連勝数"] = "-" # 0勝と1勝の場合があるので-表記にする
 
 		comp_idx = record_text.find("前日比：") # ｢前日比｣があれば記録(初日または前日と全く同じレートの場合表記が無い)
 		if 0 < comp_idx:
-			data_dict["前日比"] = record_text[comp_idx+4:record_text.find("今期対戦成績")]
+			data_dict["前日比"] = record_text[comp_idx+4:record_text.find("最高レート")]
 		else:
 			data_dict["前日比"] = "-"
 
 	elif 0 < record_text.find("初期レート"): # サブシーズン0戦状態
 		data_dict = {"今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
 		ini_rate_idx = record_text.find("初期レート")
-		data_dict["今期レート"] = record_text[ini_rate_idx+5:ini_rate_idx+9] # 初期レートを今期レートとして表示
+		data_dict["現在レート"] = record_text[ini_rate_idx+5:ini_rate_idx+9] # 初期レートを現在レートとして表示
 
 	elif 0 < mypage_text.find("MATE ID"): # メインシーズン0戦状態
-		data_dict = {"今期レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
+		data_dict = {"現在レート":"1500", "今期順位":"-", "前日比":"-", "今期勝利数":"0", "今期敗北数":"0", "連勝数":"-", "今期対戦数":"0", "今期勝率":"0%"}
 
 	else: # 全くデータを取得できなかったとき。混雑時の専用ページを想定
 		data_dict = {}
@@ -168,15 +190,21 @@ def make_data_dict(mypage_text:str):
 	return data_dict
 
 
-# データ辞書の各値を別々のテキストファイルに出力
+
 def output_data(data_dict:dict):
+	"""
+	データ辞書の各値を別々のテキストファイルに出力
+	"""
 	for s in data_dict.keys():
 		with open(s +".txt", mode="w", encoding="UTF-8") as w:
 			w.write(data_dict[s])
 
 
-# アクセス先と次回更新までの秒数を表示しつつ、テキストファイルを更新し続ける
+
 def update_text_files_while_showing_status(mypage_url:str):
+	"""
+	アクセス先と次回更新までの秒数を表示しつつ、テキストファイルを更新し続ける
+	"""
 	global settings_dict
 
 	mypage_text = fetch_mypage_text(mypage_url)
@@ -231,8 +259,11 @@ def update_text_files_while_showing_status(mypage_url:str):
 def main():
 	global settings_dict
 	try:
-		# os.chdir(os.path.dirname(sys.executable)) # exeファイルから実行する場合のディレクトリ移動。pyファイルから実行する場合は不要
-		os.chdir(os.path.dirname(os.path.abspath(__file__))) # pyファイルから直接実行する場合のディレクトリ移動。exe化時は不要
+		if execute_from_pyfile:
+			os.chdir(os.path.dirname(os.path.abspath(__file__))) # pyファイルから直接実行する場合のディレクトリ移動
+		else:
+			os.chdir(os.path.dirname(sys.executable)) # exeファイルから実行する場合のディレクトリ移動
+
 		textfile_folder_name = "output_smamate_mypage_get_data"
 		os.makedirs(textfile_folder_name, exist_ok=True)
 		os.chdir(textfile_folder_name) # 出力用のフォルダを作成して移動
@@ -256,10 +287,10 @@ def main():
 
 	except: # 何らかの想定外エラー
 		sg.popup("エラーが発生しました。下記の方法を試して再実行してください\
-			\n-exeファイルを別のディレクトリに置いて実行する\
-			\n-output_smamate_mypage_get_dataフォルダを削除する\
-			\n-セキュリティソフトの設定でsmamate_mypage_get_data.exeの動作を許可する\
-			\n-exeファイルを右クリック→｢管理者として実行(A)｣を選択する\
+			\n1. exeファイルを別のディレクトリに置いて実行する\
+			\n2. output_smamate_mypage_get_dataフォルダを削除する\
+			\n3. セキュリティソフトの設定でsmamate_mypage_get_data.exeの動作を許可する\
+			\n4. exeファイルを右クリック→｢管理者として実行(A)｣を選択する\
 			\n\nエラー詳細\n"\
 			+ str(sys.exc_info()[0]) + "\n" + str(sys.exc_info()[2].tb_lineno), no_titlebar=True)
 
