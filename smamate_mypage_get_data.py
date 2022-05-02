@@ -1,11 +1,11 @@
 """
-Copyright (C) 2022 ほーずき(ver1.00-1.04)、YON(ver2.00-2.11)
+Copyright (C) 2022 ほーずき(ver1.00-1.04)、YON(ver2.00-2.12)
 
 スマメイトのマイページから戦績データを一定間隔で取得し、テキストファイルとして出力する
 入力 : スマメイトのマイページURL
 処理 : マイページにアクセスし戦績情報を抽出、計算
 出力1 : output_smamate_mypage_get_dataフォルダ。exeファイルと同じディレクトリに作成
-出力2 : 設定、レート、順位、前日比、勝利数、敗北数、連勝数、対戦数、勝率の各ファイル。一定秒数ごとに更新。output_smamate_mypage_get_data内
+出力2 : 設定、現在レート、最高レート、順位、前日比、勝利数、敗北数、連勝数、対戦数、勝率の各ファイル。一定秒数ごとに更新。output_smamate_mypage_get_data内
 """
 
 
@@ -19,9 +19,9 @@ from bs4 import BeautifulSoup
 
 execute_from_pyfile = True # pyファイルから実行するかどうか。exe化するときFalseにする
 
-this_software_ver = 2.11
-this_software_name = "smamate_mypage_get_data"
-default_settings_dict = {"check_update":True, "mypage_url":""}
+this_software_ver = "2.12"
+this_software_name = "smamate_mypage_get_data ver" + this_software_ver
+default_settings_dict = {"check_update":True, "first_activation_of_this_ver":True, "mypage_url":""}
 settings_dict = default_settings_dict.copy()
 
 
@@ -35,6 +35,22 @@ def load_settings():
 			return pickle.load(f)
 	except:
 		return default_settings_dict.copy()
+
+
+
+def show_explanation_of_this_ver():
+	"""
+	特定のバージョンの初回起動時に、前verからの変更点や注意点を表示する
+	"""
+	global settings_dict
+
+	if "first_activation_of_this_ver" not in settings_dict or settings_dict["first_activation_of_this_ver"]:
+		sg.popup(f"ver{this_software_ver}について\
+			\n\nスマメイトのレイアウト変更に対応しました\
+			\n配信ソフトのテキストオブジェクト参照先を｢今期レート.txt｣から｢現在レート.txt｣に変更してご利用ください"
+			, no_titlebar=True)
+
+	settings_dict["first_activation_of_this_ver"] = False
 
 
 
@@ -54,7 +70,7 @@ def gonna_update():
 			latest_ver = json_dict["name"]
 			latest_ver = latest_ver[latest_ver.find("ver")+3:latest_ver.find(".")+3] # READMEの最新バージョン欄ver?.??の?.??の表記を抜き出す。後で使うので型はstr
 			
-			if this_software_ver >= float(latest_ver): # 最新版を使っている場合
+			if float(this_software_ver) >= float(latest_ver): # 最新版を使っている場合
 				return False
 
 			layout = [[sg.Text("ver" + latest_ver + "が公開されています。ダウンロードしますか？")],
@@ -84,6 +100,7 @@ def gonna_update():
 
 		except: # アクセス失敗など
 			return False
+
 
 
 def can_access_mypage(mypage_url:str):
@@ -216,7 +233,7 @@ def update_text_files_while_showing_status(mypage_url:str):
 	soup = BeautifulSoup(mypage_text, "html.parser")
 	access_timeout_sec = 30 # この秒数ごとに更新。30未満の値には設定しないこと！
 	layout = [[sg.Text("アクセス先\n" + soup.title.text + "\n" + mypage_url + "\n", key="text_access")],
-				[sg.Text("下記フォルダにテキストファイルを出力中\n配信ソフトのテキストオブジェクトのソースとして設定してください\n" + os.getcwd())],
+				[sg.Text("下記フォルダにテキストファイルを出力中\n配信ソフトのテキストオブジェクトの参照先として設定してください\n" + os.getcwd())],
 				[sg.Text("                                                                        ", key="error_msg")], # 最初に文字列スペースを確保する
 				[sg.Text("次回更新まであと" + str(access_timeout_sec) + "秒", key="text_update")],
 				[sg.Button("終了"), sg.Button("アクセスページ変更")]]
@@ -274,6 +291,8 @@ def main():
 		if gonna_update(): # アプデする場合は終了
 			sys.exit()
 
+		show_explanation_of_this_ver() # 特定のバージョンの初回起動時のみポップアップを出す
+
 		mypage_url = settings_dict["mypage_url"] # 保存されたマイページURLを読み込む
 		if not mypage_url: # 読み込めないときは新規入力
 			mypage_url = mypage_URL_input()
@@ -293,7 +312,7 @@ def main():
 			\n2. output_smamate_mypage_get_dataフォルダを削除する\
 			\n3. セキュリティソフトの設定でsmamate_mypage_get_data.exeの動作を許可する\
 			\n4. exeファイルを右クリック→｢管理者として実行(A)｣を選択する\
-			\n5. 最新版のソフトをダウンロードし直す\
+			\n5. 最新版のソフトをダウンロードし直す(｢スマメイト レート 自動更新｣で検索)\
 			\n\nエラー詳細\n"\
 			+ str(sys.exc_info()[0]) + "\n" + str(sys.exc_info()[2].tb_lineno), no_titlebar=True)
 
