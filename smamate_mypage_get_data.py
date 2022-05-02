@@ -52,38 +52,38 @@ def gonna_update():
 			soup = BeautifulSoup(html.text, "html.parser")
 			json_dict = json.loads(str(soup))
 			latest_ver = json_dict["name"]
-			latest_ver = float(latest_ver[latest_ver.find("ver")+3:latest_ver.find(".")+3]) # READMEの最新バージョン欄ver?.??の?.??の表記を抜き出す
+			latest_ver = latest_ver[latest_ver.find("ver")+3:latest_ver.find(".")+3] # READMEの最新バージョン欄ver?.??の?.??の表記を抜き出す。後で使うので型はstr
+			
+			if this_software_ver >= float(latest_ver): # 最新版を使っている場合
+				return False
+
+			layout = [[sg.Text("ver" + latest_ver + "が公開されています。ダウンロードしますか？")],
+					[sg.Button("スキップ", bind_return_key=True), sg.Button("スキップ(次回から確認しない)"), sg.Button("ダウンロード")]]
+			window = sg.Window(this_software_name, layout)
+			while True:
+				event, _ = window.read()
+				if event == sg.WIN_CLOSED:
+					sys.exit()
+				elif event == "スキップ":
+					window.close()
+					return False
+				elif event == "スキップ(次回から確認しない)": # 今後もアップデートしない場合、設定辞書に反映
+					window.close()
+					settings_dict["check_update"] = False
+					return False
+				elif event == "ダウンロード": # 規定のブラウザでアップデートzipファイルのURLを直接開き、ダウンロードする。レポジトリのページも開く
+					window.close()
+					try:
+						webbrowser.open("https://github.com/yoyoyo4/smamate_mypage_get_data")
+						webbrowser.open("https://github.com/yoyoyo4/smamate_mypage_get_data/archive/refs/heads/master.zip")
+						sg.popup("ver"+latest_ver+"のzipファイルをダウンロードしました\n解凍し、古いexeファイルを上書きしてください\nプログラムを終了します", no_titlebar=True)
+						return True
+					except:
+						sg.popup("ver"+latest_ver+"のダウンロードに失敗しました\nアップデートせずプログラムを続行します", no_titlebar=True)
+						return False
+
 		except: # アクセス失敗など
 			return False
-
-		if this_software_ver >= latest_ver: # 最新版を使っている場合
-			return False
-
-		layout = [[sg.Text("ver" + latest_ver + "が公開されています。ダウンロードしますか？")],
-				[sg.Button("スキップ", bind_return_key=True), sg.Button("スキップ(次回から確認しない)"), sg.Button("ダウンロード")]]
-		window = sg.Window(this_software_name, layout)
-		while True:
-			event, _ = window.read()
-			if event == sg.WIN_CLOSED:
-				sys.exit()
-			elif event == "スキップ":
-				window.close()
-				return False
-			elif event == "スキップ(次回から確認しない)": # 今後もアップデートしない場合、設定辞書に反映
-				window.close()
-				settings_dict["check_update"] = False
-				return False
-			elif event == "ダウンロード": # 規定のブラウザでアップデートzipファイルのURLを直接開き、ダウンロードする。レポジトリのページも開く
-				window.close()
-				try:
-					webbrowser.open("https://github.com/yoyoyo4/smamate_mypage_get_data")
-					webbrowser.open("https://github.com/yoyoyo4/smamate_mypage_get_data/archive/refs/heads/master.zip")
-					sg.popup("ver"+latest_ver+"のzipファイルをダウンロードしました。解凍して使用してください\nプログラムを終了します", no_titlebar=True)
-					return True
-				except:
-					sg.popup("ver"+latest_ver+"のダウンロードに失敗しました\nアップデートせずプログラムを続行します", no_titlebar=True)
-					return False
-
 
 
 def can_access_mypage(mypage_url:str):
@@ -293,6 +293,7 @@ def main():
 			\n2. output_smamate_mypage_get_dataフォルダを削除する\
 			\n3. セキュリティソフトの設定でsmamate_mypage_get_data.exeの動作を許可する\
 			\n4. exeファイルを右クリック→｢管理者として実行(A)｣を選択する\
+			\n5. 最新版のソフトをダウンロードし直す\
 			\n\nエラー詳細\n"\
 			+ str(sys.exc_info()[0]) + "\n" + str(sys.exc_info()[2].tb_lineno), no_titlebar=True)
 
